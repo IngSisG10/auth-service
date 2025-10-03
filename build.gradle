@@ -59,13 +59,6 @@ kover {
     }
 }
 
-tasks.register('coverageAll') {
-    group = 'verification'
-    description = 'Run tests and generate Kover reports'
-    dependsOn 'test'
-    dependsOn 'koverXmlReport'
-    dependsOn 'koverHtmlReport'
-}
 
 tasks.named("test") {
     useJUnitPlatform()
