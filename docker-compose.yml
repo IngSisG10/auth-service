@@ -23,7 +23,7 @@ services:
       POSTGRES_PASSWORD: authpass
       POSTGRES_DB: authdb
     ports:
-      - "5433:5432"
+      - "5432:5432"
     networks:
       - auth-net
     volumes:
