@@ -81,3 +81,9 @@ test {
     systemProperty "spring.profiles.active", "test"
     useJUnitPlatform()
 }
+
+tasks.named('test') {
+    doFirst {
+        file("$buildDir/tmp/test").mkdirs()
+    }
+}
