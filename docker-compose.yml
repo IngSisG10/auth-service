@@ -6,6 +6,8 @@ services:
     container_name: auth-service
     ports:
       - "8081:8080"
+    env_file:
+      - .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/authdb
       SPRING_DATASOURCE_USERNAME: authuser
