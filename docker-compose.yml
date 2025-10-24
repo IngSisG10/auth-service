@@ -1,11 +1,9 @@
-version: "3.9"
-
 services:
   auth-service:
     build: .
     container_name: auth-service
     ports:
-      - "${AUTH_SERVICE_PORT}:8080"
+      - "8081:8080"  # maps container 8080 to host 8081
     environment:
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
@@ -23,7 +21,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${AUTH_DB_PORT}:5432"
+      - "5432:5432"  # fixed host port
     networks:
       - auth-net
     volumes:
