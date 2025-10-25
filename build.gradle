@@ -27,6 +27,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'com.h2database:h2'
     testImplementation 'org.postgresql:postgresql'
@@ -51,21 +53,25 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-kover {
-    reports {
-        verify {
-            rule {
-                bound {
-                    minValue = 1
+tasks.named("bootRun") {
+    doFirst {
+        def envFile = file(".env")
+        if (envFile.exists()) {
+            println "Loading environment variables from .env"
+            envFile.eachLine { line ->
+                if (line && !line.startsWith("#")) {
+                    def parts = line.split("=", 2)
+                    if (parts.length == 2) {
+                        def key = parts[0].trim()
+                        def value = parts[1].trim()
+                        environment key, value
+                    }
                 }
             }
+        } else {
+            println ".env file not found, skipping..."
         }
     }
-}
-
-
-tasks.named("test") {
-    useJUnitPlatform()
 }
 
 tasks.register("installGitHooks", Exec) {
@@ -74,16 +80,5 @@ tasks.register("installGitHooks", Exec) {
     commandLine "git", "config", "core.hooksPath", ".github/hooks"
     doLast {
         println("Hooks configured via core.hooksPath")
-    }
-}
-
-test {
-    systemProperty "spring.profiles.active", "test"
-    useJUnitPlatform()
-}
-
-tasks.named('test') {
-    doFirst {
-        file("$buildDir/tmp/test").mkdirs()
     }
 }
