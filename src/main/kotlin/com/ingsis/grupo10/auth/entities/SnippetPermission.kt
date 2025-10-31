@@ -11,15 +11,17 @@ import java.util.UUID
 
 @Entity
 @Table(name = "snippet_permissions")
-data class SnippetPermission(
+class SnippetPermission(
     @Id
     val id: UUID = UUID.randomUUID(),
     @ManyToOne
     @JoinColumn(name = "user_id")
-    val user: User,
+    var user: User,
     @ManyToOne
     @JoinColumn(name = "snippet_id")
-    val snippet: Snippet,
+    var snippet: Snippet,
     @Enumerated(EnumType.STRING)
-    val permission: PermissionType,
-)
+    var permission: PermissionType,
+) {
+    constructor() : this(UUID.randomUUID(), User(), Snippet(), PermissionType.READ)
+}
