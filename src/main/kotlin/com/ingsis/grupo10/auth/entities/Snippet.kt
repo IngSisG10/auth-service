@@ -11,12 +11,14 @@ import java.util.UUID
 
 @Entity
 @Table(name = "snippets")
-data class Snippet(
+class Snippet(
     @Id
     val snippetId: UUID = UUID.randomUUID(),
     @ManyToOne
     @JoinColumn(name = "owner_id")
-    val owner: User,
+    var owner: User,
     @OneToMany(mappedBy = "snippet", cascade = [CascadeType.ALL], orphanRemoval = true)
     val permissions: MutableSet<SnippetPermission> = HashSet(),
-)
+) {
+    constructor() : this(UUID.randomUUID(), User())
+}
