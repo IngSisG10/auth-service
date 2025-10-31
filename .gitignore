@@ -39,5 +39,16 @@ out/
 ### Kotlin ###
 .kotlin
 
-### Enviroment ###
+### .env files ###
 .env
+
+# Gradle wrapper
+gradle/wrapper/gradle-wrapper.properties
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+

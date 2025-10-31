@@ -72,6 +72,21 @@ tasks.named("bootRun") {
             println ".env file not found, skipping..."
         }
     }
+kover {
+    reports {
+        verify {
+            rule {
+                bound {
+                    minValue = 1
+                }
+            }
+        }
+    }
+}
+
+
+tasks.named("test") {
+    useJUnitPlatform()
 }
 
 tasks.register("installGitHooks", Exec) {
@@ -80,5 +95,6 @@ tasks.register("installGitHooks", Exec) {
     commandLine "git", "config", "core.hooksPath", ".github/hooks"
     doLast {
         println("Hooks configured via core.hooksPath")
+      }
     }
 }
