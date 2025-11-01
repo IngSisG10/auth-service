@@ -1,6 +1,6 @@
 package com.ingsis.grupo10.auth.repositories
 
-import com.ingsis.grupo10.auth.entities.SnippetPermission
+import com.ingsis.grupo10.auth.models.permission.SnippetPermission
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 

@@ -72,29 +72,29 @@ tasks.named("bootRun") {
             println ".env file not found, skipping..."
         }
     }
-kover {
-    reports {
-        verify {
-            rule {
-                bound {
-                    minValue = 1
+    kover {
+        reports {
+            verify {
+                rule {
+                    bound {
+                        minValue = 1
+                    }
                 }
             }
         }
     }
-}
 
 
-tasks.named("test") {
-    useJUnitPlatform()
-}
+    tasks.named("test") {
+        useJUnitPlatform()
+    }
 
-tasks.register("installGitHooks", Exec) {
-    group = "setup"
-    description = "Install git hooks"
-    commandLine "git", "config", "core.hooksPath", ".github/hooks"
-    doLast {
-        println("Hooks configured via core.hooksPath")
-      }
+    tasks.register("installGitHooks", Exec) {
+        group = "setup"
+        description = "Install git hooks"
+        commandLine "git", "config", "core.hooksPath", ".github/hooks"
+        doLast {
+            println("Hooks configured via core.hooksPath")
+        }
     }
 }

@@ -1,5 +1,7 @@
-package com.ingsis.grupo10.auth.entities
+package com.ingsis.grupo10.auth.models.permission
 
+import com.ingsis.grupo10.auth.models.snippet.Snippet
+import com.ingsis.grupo10.auth.models.user.User
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
