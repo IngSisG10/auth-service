@@ -20,8 +20,10 @@ class UserController(
         @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<UserResponse> {
         val userId = jwt.subject
-        val email = jwt.getClaim<String>("email")
-        val name = jwt.getClaim<String>("name")
+        val namespace = "https://your-app.com"
+
+        val email = jwt.getClaim<String>("$namespace/email")
+        val name = jwt.getClaim<String>("$namespace/name")
 
         val user = userService.getOrCreateUser(userId, email, name)
         return ResponseEntity.ok(user)
