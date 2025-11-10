@@ -43,7 +43,7 @@ class UserService(
         }
 
         return UserResponse(
-            id = user.id,
+            userId = user.id,
             email = user.email,
             name = user.name,
         )
@@ -56,7 +56,7 @@ class UserService(
                 .orElseThrow { IllegalArgumentException("User not found") }
 
         return UserResponse(
-            id = user.id,
+            userId = user.id,
             email = user.email,
             name = user.name,
         )
@@ -75,7 +75,7 @@ class UserService(
                     user.name?.contains(query, ignoreCase = true) == true
             }.map { user ->
                 UserResponse(
-                    id = user.id,
+                    userId = user.id,
                     email = user.email,
                     name = user.name,
                 )

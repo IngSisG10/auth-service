@@ -16,6 +16,7 @@ services:
       - auth-db
     networks:
       - auth-net
+      - shared_network
 
   auth-db:
     image: postgres:15
@@ -25,7 +26,7 @@ services:
       POSTGRES_PASSWORD: authpass
       POSTGRES_DB: authdb
     ports:
-      - "5432:5432"
+      - "5434:5432"
     networks:
       - auth-net
     volumes:
@@ -34,6 +35,8 @@ services:
 networks:
   auth-net:
     driver: bridge
+  shared_network:
+    external: true
 
 volumes:
   auth-data:
