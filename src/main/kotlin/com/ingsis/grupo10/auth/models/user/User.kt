@@ -1,7 +1,6 @@
 package com.ingsis.grupo10.auth.models.user
 
 import com.ingsis.grupo10.auth.models.permission.SnippetPermission
-import com.ingsis.grupo10.auth.models.snippet.Snippet
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -15,8 +14,6 @@ class User(
     val id: String, // Auth0 "sub" claim (e.g., "auth0|65fb2cd13f1234567890abcd")
     var email: String? = null,
     var name: String? = null,
-    @OneToMany(mappedBy = "owner", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val ownedSnippets: MutableSet<Snippet> = HashSet(),
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
     val permissions: MutableSet<SnippetPermission> = HashSet(),
 ) {

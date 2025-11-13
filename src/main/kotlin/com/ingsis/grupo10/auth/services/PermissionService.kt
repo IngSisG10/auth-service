@@ -4,9 +4,7 @@ import com.ingsis.grupo10.auth.models.permission.PermissionType
 import com.ingsis.grupo10.auth.models.permission.SnippetPermission
 import com.ingsis.grupo10.auth.models.permission.dto.PermissionResponse
 import com.ingsis.grupo10.auth.models.permission.dto.SnippetPermissionInfo
-import com.ingsis.grupo10.auth.models.snippet.Snippet
 import com.ingsis.grupo10.auth.repositories.SnippetPermissionRepository
-import com.ingsis.grupo10.auth.repositories.SnippetRepository
 import com.ingsis.grupo10.auth.repositories.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -14,7 +12,6 @@ import java.util.UUID
 
 @Service
 class PermissionService(
-    private val snippetRepository: SnippetRepository,
     private val userRepository: UserRepository,
     private val snippetPermissionRepository: SnippetPermissionRepository,
 ) {
@@ -29,16 +26,24 @@ class PermissionService(
                 .findById(ownerId)
                 .orElseThrow { IllegalArgumentException("User not found: $ownerId") }
 
-        if (snippetRepository.existsById(snippetId)) {
+        // Check if snippet already has an owner
+        val existingOwner =
+            snippetPermissionRepository
+                .findBySnippetId(snippetId)
+                .find { it.permission == PermissionType.OWNER }
+
+        if (existingOwner != null) {
             throw IllegalArgumentException("Snippet already registered: $snippetId")
         }
 
-        val snippet =
-            Snippet(
+        // Create owner permission entry
+        val ownerPermission =
+            SnippetPermission(
                 snippetId = snippetId,
-                owner = owner,
+                user = owner,
+                permission = PermissionType.OWNER,
             )
-        snippetRepository.save(snippet)
+        snippetPermissionRepository.save(ownerPermission)
     }
 
     // Called by snippet service when a snippet is deleted
@@ -47,16 +52,19 @@ class PermissionService(
         snippetId: UUID,
         requesterId: String,
     ) {
-        val snippet =
-            snippetRepository
-                .findById(snippetId)
-                .orElseThrow { IllegalArgumentException("Snippet not found: $snippetId") }
+        val ownerPermission =
+            snippetPermissionRepository
+                .findBySnippetId(snippetId)
+                .find { it.permission == PermissionType.OWNER }
+                ?: throw IllegalArgumentException("Snippet not found: $snippetId")
 
-        if (snippet.owner.id != requesterId) {
+        if (ownerPermission.user.id != requesterId) {
             throw IllegalAccessException("Only the owner can unregister this snippet")
         }
 
-        snippetRepository.delete(snippet)
+        // Delete all permissions for this snippet (including owner)
+        val allPermissions = snippetPermissionRepository.findBySnippetId(snippetId)
+        snippetPermissionRepository.deleteAll(allPermissions)
     }
 
     // Check if user has specific permission on snippet
@@ -65,24 +73,33 @@ class PermissionService(
         snippetId: UUID,
         requiredPermission: PermissionType,
     ): Boolean {
-        val snippet = snippetRepository.findById(snippetId).orElse(null) ?: return false
-
-        // Owner has all permissions
-        if (snippet.owner.id == userId) {
-            return true
-        }
-
-        // Check explicit permissions
-        val permission =
+        val userPermission =
             snippetPermissionRepository
-                .findBySnippetSnippetId(snippetId)
+                .findBySnippetId(snippetId)
                 .find { it.user.id == userId }
                 ?: return false
 
+        println(
+            "User $userId permissions for snippet $snippetId: ${
+                snippetPermissionRepository.findBySnippetId(snippetId).map { it.user.id + ":" + it.permission }
+            }",
+        )
+
         return when (requiredPermission) {
-            PermissionType.READ -> permission.permission in listOf(PermissionType.READ, PermissionType.WRITE, PermissionType.OWNER)
-            PermissionType.WRITE -> permission.permission in listOf(PermissionType.WRITE, PermissionType.OWNER)
-            PermissionType.OWNER -> permission.permission == PermissionType.OWNER
+            PermissionType.READ ->
+                userPermission.permission in
+                    listOf(
+                        PermissionType.READ,
+                        PermissionType.WRITE,
+                        PermissionType.OWNER,
+                    )
+            PermissionType.WRITE ->
+                userPermission.permission in
+                    listOf(
+                        PermissionType.WRITE,
+                        PermissionType.OWNER,
+                    )
+            PermissionType.OWNER -> userPermission.permission == PermissionType.OWNER
         }
     }
 
@@ -91,25 +108,9 @@ class PermissionService(
         userId: String,
         snippetId: UUID,
     ): PermissionResponse {
-        val snippet =
-            snippetRepository
-                .findById(snippetId)
-                .orElseThrow { IllegalArgumentException("Snippet not found: $snippetId") }
-
-        if (snippet.owner.id == userId) {
-            return PermissionResponse(
-                snippetId = snippetId,
-                userId = userId,
-                permission = PermissionType.OWNER,
-                canRead = true,
-                canWrite = true,
-                isOwner = true,
-            )
-        }
-
         val permission =
             snippetPermissionRepository
-                .findBySnippetSnippetId(snippetId)
+                .findBySnippetId(snippetId)
                 .find { it.user.id == userId }
 
         if (permission == null) {
@@ -127,36 +128,40 @@ class PermissionService(
             snippetId = snippetId,
             userId = userId,
             permission = permission.permission,
-            canRead = permission.permission in listOf(PermissionType.READ, PermissionType.WRITE, PermissionType.OWNER),
-            canWrite = permission.permission in listOf(PermissionType.WRITE, PermissionType.OWNER),
+            canRead =
+                permission.permission in
+                    listOf(
+                        PermissionType.READ,
+                        PermissionType.WRITE,
+                        PermissionType.OWNER,
+                    ),
+            canWrite =
+                permission.permission in
+                    listOf(
+                        PermissionType.WRITE,
+                        PermissionType.OWNER,
+                    ),
             isOwner = permission.permission == PermissionType.OWNER,
         )
     }
 
     // Get all snippets a user can access
-    fun getUserAccessibleSnippets(userId: String): List<SnippetPermissionInfo> {
-        val ownedSnippets =
-            snippetRepository.findByOwnerId(userId).map {
-                SnippetPermissionInfo(
-                    snippetId = it.snippetId,
-                    ownerId = it.owner.id,
-                    ownerEmail = it.owner.email,
-                    permission = PermissionType.OWNER,
-                )
-            }
+    fun getUserAccessibleSnippets(userId: String): List<SnippetPermissionInfo> =
+        snippetPermissionRepository.findByUserId(userId).map { permission ->
+            // Get the owner for this snippet
+            val owner =
+                snippetPermissionRepository
+                    .findBySnippetId(permission.snippetId)
+                    .find { it.permission == PermissionType.OWNER }
+                    ?.user
 
-        val sharedSnippets =
-            snippetPermissionRepository.findByUserId(userId).map {
-                SnippetPermissionInfo(
-                    snippetId = it.snippet.snippetId,
-                    ownerId = it.snippet.owner.id,
-                    ownerEmail = it.snippet.owner.email,
-                    permission = it.permission,
-                )
-            }
-
-        return ownedSnippets + sharedSnippets
-    }
+            SnippetPermissionInfo(
+                snippetId = permission.snippetId,
+                ownerId = owner?.id ?: "unknown",
+                ownerEmail = owner?.email,
+                permission = permission.permission,
+            )
+        }
 
     // Grant or update permission
     @Transactional
@@ -166,13 +171,14 @@ class PermissionService(
         targetUserEmail: String,
         permission: PermissionType,
     ) {
-        val snippet =
-            snippetRepository
-                .findById(snippetId)
-                .orElseThrow { IllegalArgumentException("Snippet not found: $snippetId") }
+        // Verify requester is the owner
+        val ownerPermission =
+            snippetPermissionRepository
+                .findBySnippetId(snippetId)
+                .find { it.permission == PermissionType.OWNER }
+                ?: throw IllegalArgumentException("Snippet not found: $snippetId")
 
-        // Only owner can grant permissions
-        if (snippet.owner.id != requesterId) {
+        if (ownerPermission.user.id != requesterId) {
             throw IllegalAccessException("Only the owner can grant permissions")
         }
 
@@ -181,27 +187,27 @@ class PermissionService(
                 ?: throw IllegalArgumentException("Target user not found: $targetUserEmail")
 
         // Can't grant permission to owner
-        if (targetUser.id == snippet.owner.id) {
+        if (targetUser.id == ownerPermission.user.id) {
             throw IllegalArgumentException("Cannot grant permission to the owner")
         }
 
         // Check if permission already exists
         val existingPermission =
             snippetPermissionRepository
-                .findBySnippetSnippetId(snippetId)
+                .findBySnippetId(snippetId)
                 .find { it.user.id == targetUser.id }
 
         if (existingPermission != null) {
             existingPermission.permission = permission
             snippetPermissionRepository.save(existingPermission)
         } else {
-            val snippetPermission =
+            val newPermission =
                 SnippetPermission(
+                    snippetId = snippetId,
                     user = targetUser,
-                    snippet = snippet,
                     permission = permission,
                 )
-            snippetPermissionRepository.save(snippetPermission)
+            snippetPermissionRepository.save(newPermission)
         }
     }
 
@@ -212,19 +218,19 @@ class PermissionService(
         snippetId: UUID,
         targetUserId: String,
     ) {
-        val snippet =
-            snippetRepository
-                .findById(snippetId)
-                .orElseThrow { IllegalArgumentException("Snippet not found: $snippetId") }
+        val ownerPermission =
+            snippetPermissionRepository
+                .findBySnippetId(snippetId)
+                .find { it.permission == PermissionType.OWNER }
+                ?: throw IllegalArgumentException("Snippet not found: $snippetId")
 
-        // Only owner can revoke permissions
-        if (snippet.owner.id != requesterId) {
+        if (ownerPermission.user.id != requesterId) {
             throw IllegalAccessException("Only the owner can revoke permissions")
         }
 
         val permission =
             snippetPermissionRepository
-                .findBySnippetSnippetId(snippetId)
+                .findBySnippetId(snippetId)
                 .find { it.user.id == targetUserId }
                 ?: throw IllegalArgumentException("Permission not found")
 
@@ -236,23 +242,26 @@ class PermissionService(
         requesterId: String,
         snippetId: UUID,
     ): List<SnippetPermissionInfo> {
-        val snippet =
-            snippetRepository
-                .findById(snippetId)
-                .orElseThrow { IllegalArgumentException("Snippet not found: $snippetId") }
+        val ownerPermission =
+            snippetPermissionRepository
+                .findBySnippetId(snippetId)
+                .find { it.permission == PermissionType.OWNER }
+                ?: throw IllegalArgumentException("Snippet not found: $snippetId")
 
-        // Only owner can view all permissions
-        if (snippet.owner.id != requesterId) {
+        if (ownerPermission.user.id != requesterId) {
             throw IllegalAccessException("Only the owner can view all permissions")
         }
 
-        return snippetPermissionRepository.findBySnippetSnippetId(snippetId).map {
-            SnippetPermissionInfo(
-                snippetId = it.snippet.snippetId,
-                ownerId = it.user.id,
-                ownerEmail = it.user.email,
-                permission = it.permission,
-            )
-        }
+        return snippetPermissionRepository
+            .findBySnippetId(snippetId)
+            .filter { it.permission != PermissionType.OWNER } // Don't include owner in shared list
+            .map {
+                SnippetPermissionInfo(
+                    snippetId = it.snippetId,
+                    ownerId = it.user.id,
+                    ownerEmail = it.user.email,
+                    permission = it.permission,
+                )
+            }
     }
 }

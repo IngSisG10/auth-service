@@ -54,6 +54,7 @@ class PermissionController(
     ): ResponseEntity<Map<String, Boolean>> {
         val userId = jwt.subject
         val hasPermission = permissionService.hasPermission(userId, snippetId, requiredPermission)
+        println("Checking permission for user=${jwt.subject} on snippet=$snippetId with requiredPermission=$requiredPermission")
         return ResponseEntity.ok(mapOf("hasPermission" to hasPermission))
     }
 
