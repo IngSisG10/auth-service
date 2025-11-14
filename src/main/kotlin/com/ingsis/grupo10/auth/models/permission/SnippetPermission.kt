@@ -1,5 +1,6 @@
-package com.ingsis.grupo10.auth.entities
+package com.ingsis.grupo10.auth.models.permission
 
+import com.ingsis.grupo10.auth.models.user.User
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -14,14 +15,12 @@ import java.util.UUID
 class SnippetPermission(
     @Id
     val id: UUID = UUID.randomUUID(),
+    val snippetId: UUID, // Just store the snippet ID directly
     @ManyToOne
     @JoinColumn(name = "user_id")
     var user: User,
-    @ManyToOne
-    @JoinColumn(name = "snippet_id")
-    var snippet: Snippet,
     @Enumerated(EnumType.STRING)
     var permission: PermissionType,
 ) {
-    constructor() : this(UUID.randomUUID(), User(), Snippet(), PermissionType.READ)
+    constructor() : this(UUID.randomUUID(), UUID.randomUUID(), User(), PermissionType.READ)
 }
