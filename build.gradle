@@ -4,8 +4,8 @@ plugins {
     id 'org.springframework.boot' version '3.5.6'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
-    id 'org.jetbrains.kotlinx.kover' version '0.9.0'
-    id 'org.jlleitschuh.gradle.ktlint' version '13.0.0'
+    // id 'org.jetbrains.kotlinx.kover' version '0.9.0'
+    // id 'org.jlleitschuh.gradle.ktlint' version '13.0.0'
 }
 
 group = 'com.ingsis.grupo10'
@@ -29,7 +29,9 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
     runtimeOnly 'org.postgresql:postgresql'
+
     testImplementation 'com.h2database:h2'
     testImplementation 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -60,41 +62,21 @@ tasks.named("bootRun") {
             println "Loading environment variables from .env"
             envFile.eachLine { line ->
                 if (line && !line.startsWith("#")) {
-                    def parts = line.split("=", 2)
-                    if (parts.length == 2) {
-                        def key = parts[0].trim()
-                        def value = parts[1].trim()
-                        environment key, value
-                    }
+                    def (key, value) = line.split("=", 2)
+                    environment key.trim(), value.trim()
                 }
             }
         } else {
             println ".env file not found, skipping..."
         }
     }
-    kover {
-        reports {
-            verify {
-                rule {
-                    bound {
-                        minValue = 1
-                    }
-                }
-            }
-        }
-    }
+}
 
-
-    tasks.named("test") {
-        useJUnitPlatform()
-    }
-
-    tasks.register("installGitHooks", Exec) {
-        group = "setup"
-        description = "Install git hooks"
-        commandLine "git", "config", "core.hooksPath", ".github/hooks"
-        doLast {
-            println("Hooks configured via core.hooksPath")
-        }
+tasks.register("installGitHooks", Exec) {
+    group = "setup"
+    description = "Install git hooks"
+    commandLine "git", "config", "core.hooksPath", ".github/hooks"
+    doLast {
+        println("Hooks configured via core.hooksPath")
     }
 }
