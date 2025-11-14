@@ -13,12 +13,14 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtValidators
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
 @EnableWebSecurity
 class OAuth2ResourceServerSecurityConfiguration(
     @Value("\${auth0.audience}") private val audience: String,
     @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}") private val issuer: String,
+    private val serviceApiKeyFilter: ServiceApiKeyFilter,
 ) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
@@ -31,7 +33,8 @@ class OAuth2ResourceServerSecurityConfiguration(
                     .authenticated()
                     .anyRequest()
                     .authenticated()
-            }.oauth2ResourceServer { it.jwt(withDefaults()) }
+            }.addFilterBefore(serviceApiKeyFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .oauth2ResourceServer { it.jwt(withDefaults()) }
             .cors(withDefaults())
             .csrf { it.disable() }
 

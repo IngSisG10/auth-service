@@ -12,6 +12,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: authpass
       AUTH0_AUDIENCE: https://my-api-identifier
       AUTH_SERVER_URI: dev-rhvn1b43rtt1hdap.us.auth0.com/
+      SERVICE_API_KEY: ${SERVICE_API_KEY}
     depends_on:
       - auth-db
     networks:

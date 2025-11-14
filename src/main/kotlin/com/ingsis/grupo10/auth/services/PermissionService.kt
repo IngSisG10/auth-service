@@ -21,10 +21,11 @@ class PermissionService(
         snippetId: UUID,
         ownerId: String,
     ) {
+        // DO NOT auto-create user - user MUST exist
         val owner =
             userRepository
                 .findById(ownerId)
-                .orElseThrow { IllegalArgumentException("User not found: $ownerId") }
+                .orElseThrow { IllegalArgumentException("User not found: $ownerId. User must be registered first.") }
 
         // Check if snippet already has an owner
         val existingOwner =
@@ -264,4 +265,17 @@ class PermissionService(
                 )
             }
     }
+
+    fun getUserOwnedSnippets(userId: String): List<SnippetPermissionInfo> =
+        snippetPermissionRepository
+            .findByUserId(userId)
+            .filter { it.permission == PermissionType.OWNER }
+            .map { permission ->
+                SnippetPermissionInfo(
+                    snippetId = permission.snippetId,
+                    ownerId = permission.user.id,
+                    ownerEmail = permission.user.email,
+                    permission = permission.permission,
+                )
+            }
 }

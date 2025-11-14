@@ -37,10 +37,9 @@ class PermissionController(
     // Called by snippet service when deleting a snippet
     @DeleteMapping("/snippets/{snippetId}")
     fun unregisterSnippet(
-        @AuthenticationPrincipal jwt: Jwt,
         @PathVariable snippetId: UUID,
+        @RequestParam userId: String,
     ): ResponseEntity<Void> {
-        val userId = jwt.subject
         permissionService.unregisterSnippet(snippetId, userId)
         return ResponseEntity.noContent().build()
     }
@@ -48,13 +47,12 @@ class PermissionController(
     // Check if user has permission (for snippet service to validate access)
     @GetMapping("/snippets/{snippetId}/check")
     fun checkPermission(
-        @AuthenticationPrincipal jwt: Jwt,
         @PathVariable snippetId: UUID,
+        @RequestParam userId: String,
         @RequestParam(required = false, defaultValue = "READ") requiredPermission: PermissionType,
     ): ResponseEntity<Map<String, Boolean>> {
-        val userId = jwt.subject
         val hasPermission = permissionService.hasPermission(userId, snippetId, requiredPermission)
-        println("Checking permission for user=${jwt.subject} on snippet=$snippetId with requiredPermission=$requiredPermission")
+        println("Checking permission for user=$userId on snippet=$snippetId with requiredPermission=$requiredPermission")
         return ResponseEntity.ok(mapOf("hasPermission" to hasPermission))
     }
 
@@ -103,14 +101,28 @@ class PermissionController(
         return ResponseEntity.noContent().build()
     }
 
-    // Get all permissions for a snippet (only owner can view)
     @GetMapping("/snippets/{snippetId}/users")
     fun getSnippetPermissions(
-        @AuthenticationPrincipal jwt: Jwt,
         @PathVariable snippetId: UUID,
+        @RequestParam userId: String,
     ): ResponseEntity<List<SnippetPermissionInfo>> {
-        val userId = jwt.subject
         val permissions = permissionService.getSnippetPermissions(userId, snippetId)
         return ResponseEntity.ok(permissions)
+    }
+
+    @GetMapping("/owned-snippets")
+    fun getOwnedSnippets(
+        @RequestParam userId: String,
+    ): ResponseEntity<List<SnippetPermissionInfo>> {
+        val snippets = permissionService.getUserOwnedSnippets(userId)
+        return ResponseEntity.ok(snippets)
+    }
+
+    @GetMapping("/accessible-snippets")
+    fun getAccessibleSnippets(
+        @RequestParam userId: String,
+    ): ResponseEntity<List<SnippetPermissionInfo>> {
+        val snippets = permissionService.getUserAccessibleSnippets(userId)
+        return ResponseEntity.ok(snippets)
     }
 }
