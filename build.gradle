@@ -4,8 +4,8 @@ plugins {
     id 'org.springframework.boot' version '3.5.6'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
-    // id 'org.jetbrains.kotlinx.kover' version '0.9.0'
-    // id 'org.jlleitschuh.gradle.ktlint' version '13.0.0'
+     id 'org.jetbrains.kotlinx.kover' version '0.9.0'
+     id 'org.jlleitschuh.gradle.ktlint' version '13.0.0'
 }
 
 group = 'com.ingsis.grupo10'
@@ -78,5 +78,16 @@ tasks.register("installGitHooks", Exec) {
     commandLine "git", "config", "core.hooksPath", ".github/hooks"
     doLast {
         println("Hooks configured via core.hooksPath")
+    }
+}
+
+kover {
+    reports {
+        xml {
+            onCheck = false
+        }
+        html {
+            onCheck = false
+        }
     }
 }
