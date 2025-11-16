@@ -278,4 +278,17 @@ class PermissionService(
                     permission = permission.permission,
                 )
             }
+
+    fun getUserReadSnippets(userId: String): List<SnippetPermissionInfo> =
+        snippetPermissionRepository
+            .findByUserId(userId)
+            .filter { it.permission == PermissionType.READ }
+            .map { permission ->
+                SnippetPermissionInfo(
+                    snippetId = permission.snippetId,
+                    ownerId = permission.user.id,
+                    ownerEmail = permission.user.email,
+                    permission = permission.permission,
+                )
+            }
 }

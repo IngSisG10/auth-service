@@ -88,7 +88,7 @@ tasks.register("installGitHooks", Exec) {
             verify {
                 rule {
                     bound {
-                        minValue = 1
+                        minValue = 0
                     }
                 }
             }

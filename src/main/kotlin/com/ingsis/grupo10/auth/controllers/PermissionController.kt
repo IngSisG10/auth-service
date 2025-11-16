@@ -125,4 +125,12 @@ class PermissionController(
         val snippets = permissionService.getUserAccessibleSnippets(userId)
         return ResponseEntity.ok(snippets)
     }
+
+    @GetMapping("/read-snippets")
+    fun getReadSnippets(
+        @RequestParam userId: String,
+    ): ResponseEntity<List<SnippetPermissionInfo>> {
+        val snippets = permissionService.getUserReadSnippets(userId)
+        return ResponseEntity.ok(snippets)
+    }
 }
