@@ -78,14 +78,11 @@ class PermissionController(
     }
 
     // Grant permission to another user (only owner can do this)
-    @PostMapping("/snippets/{snippetId}/grant")
+    @PostMapping("/snippets/grant")
     fun grantPermission(
-        @AuthenticationPrincipal jwt: Jwt,
-        @PathVariable snippetId: UUID,
         @RequestBody request: GrantPermissionRequest,
     ): ResponseEntity<Void> {
-        val userId = jwt.subject
-        permissionService.grantPermission(userId, snippetId, request.targetUserEmail, request.permission)
+        permissionService.grantPermission(request.snippetId, request.targetUserEmail)
         return ResponseEntity.ok().build()
     }
 
