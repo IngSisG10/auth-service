@@ -1,5 +1,6 @@
 package com.ingsis.grupo10.auth.controllers
 
+import com.ingsis.grupo10.auth.models.user.dto.FoundUsersDto
 import com.ingsis.grupo10.auth.models.user.dto.UserResponse
 import com.ingsis.grupo10.auth.repositories.UserRepository
 import com.ingsis.grupo10.auth.services.UserService
@@ -48,10 +49,12 @@ class UserController(
 
     @GetMapping("/search")
     fun searchUsers(
-        @AuthenticationPrincipal jwt: Jwt,
-        @RequestParam query: String,
-    ): ResponseEntity<List<UserResponse>> {
-        val users = userService.searchUsers(query)
-        return ResponseEntity.ok(users)
+        @RequestParam userId: String,
+        @RequestParam(required = false) email: String?,
+        @RequestParam(required = false, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "10") pageSize: Int,
+    ): ResponseEntity<FoundUsersDto> {
+        val result = userService.searchUsersWithPagination(userId, email, page, pageSize)
+        return ResponseEntity.ok(result)
     }
 }

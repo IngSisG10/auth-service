@@ -1,8 +1,11 @@
 package com.ingsis.grupo10.auth.services
 
 import com.ingsis.grupo10.auth.models.user.User
+import com.ingsis.grupo10.auth.models.user.dto.FoundUsersDto
+import com.ingsis.grupo10.auth.models.user.dto.UIUserResponse
 import com.ingsis.grupo10.auth.models.user.dto.UserResponse
 import com.ingsis.grupo10.auth.repositories.UserRepository
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -80,5 +83,29 @@ class UserService(
                     name = user.name,
                 )
             }
+    }
+
+    fun searchUsersWithPagination(
+        userId: String,
+        email: String?,
+        page: Int,
+        pageSize: Int,
+    ): FoundUsersDto {
+        val pageable = PageRequest.of(page, pageSize)
+        val usersPage = userRepository.searchUsers(userId, email, pageable)
+
+        val users =
+            usersPage.content.map { user ->
+                UIUserResponse(
+                    id = user.id,
+                    email = user.email,
+                    name = user.name,
+                )
+            }
+
+        return FoundUsersDto(
+            totalCount = usersPage.totalElements.toInt(),
+            users = users,
+        )
     }
 }

@@ -167,21 +167,14 @@ class PermissionService(
     // Grant or update permission
     @Transactional
     fun grantPermission(
-        requesterId: String,
         snippetId: UUID,
-        targetUserEmail: String,
-        permission: PermissionType,
+        targetUserEmail: String
     ) {
-        // Verify requester is the owner
         val ownerPermission =
             snippetPermissionRepository
                 .findBySnippetId(snippetId)
                 .find { it.permission == PermissionType.OWNER }
                 ?: throw IllegalArgumentException("Snippet not found: $snippetId")
-
-        if (ownerPermission.user.id != requesterId) {
-            throw IllegalAccessException("Only the owner can grant permissions")
-        }
 
         val targetUser =
             userRepository.findByEmail(targetUserEmail)
@@ -199,14 +192,13 @@ class PermissionService(
                 .find { it.user.id == targetUser.id }
 
         if (existingPermission != null) {
-            existingPermission.permission = permission
             snippetPermissionRepository.save(existingPermission)
         } else {
             val newPermission =
                 SnippetPermission(
                     snippetId = snippetId,
                     user = targetUser,
-                    permission = permission,
+                    permission = PermissionType.READ,
                 )
             snippetPermissionRepository.save(newPermission)
         }
