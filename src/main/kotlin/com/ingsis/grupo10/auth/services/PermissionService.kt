@@ -168,7 +168,7 @@ class PermissionService(
     @Transactional
     fun grantPermission(
         snippetId: UUID,
-        targetUserEmail: String
+        targetUserEmail: String,
     ) {
         val ownerPermission =
             snippetPermissionRepository
