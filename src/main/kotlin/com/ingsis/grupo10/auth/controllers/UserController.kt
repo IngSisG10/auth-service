@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/users")
 class UserController(
     private val userService: UserService,
-    private val UserRepository: UserRepository,
+    private val userRepository: UserRepository,
 ) {
     @PostMapping("/exists")
     fun checkUserExists(
@@ -29,7 +29,7 @@ class UserController(
                 .badRequest()
                 .body(mapOf("exists" to false))
 
-        val exists = UserRepository.existsById(userId)
+        val exists = userRepository.existsById(userId)
         return ResponseEntity.ok(mapOf("exists" to exists))
     }
 
@@ -56,5 +56,20 @@ class UserController(
     ): ResponseEntity<FoundUsersDto> {
         val result = userService.searchUsersWithPagination(userId, email, page, pageSize)
         return ResponseEntity.ok(result)
+    }
+
+    @PostMapping("/register-or-login")
+    fun registerOrLogin(
+        @RequestBody request: Map<String, String?>,
+    ): ResponseEntity<UserResponse> {
+        val userId =
+            request["userId"]
+                ?: return ResponseEntity.badRequest().build()
+        val email = request["email"]
+        val name = request["name"]
+
+        val user = userService.getOrCreateUser(userId, email, name)
+
+        return ResponseEntity.ok(user)
     }
 }
