@@ -82,18 +82,3 @@ tasks.register("installGitHooks", Exec) {
         println("Hooks configured via core.hooksPath")
     }
 }
-
-    kover {
-        reports {
-            verify {
-                rule {
-                    bound {
-                        minValue = 0
-                    }
-                }
-            }
-        }
-    }
-
-
-
