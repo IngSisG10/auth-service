@@ -24,7 +24,6 @@ class AuthController(
     ): ResponseEntity<ValidateTokenResponse> {
         val userId = jwt.subject
         val namespace = "https://your-app.com"
-
         val email = jwt.getClaim<String>("$namespace/email")
         val name = jwt.getClaim<String>("$namespace/name")
 
