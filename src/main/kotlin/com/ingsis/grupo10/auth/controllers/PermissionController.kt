@@ -130,4 +130,15 @@ class PermissionController(
         val snippets = permissionService.getUserReadSnippets(userId)
         return ResponseEntity.ok(snippets)
     }
+
+    @GetMapping("/snippets/{snippetId}/owner")
+    fun getSnippetOwner(
+        @PathVariable snippetId: UUID,
+    ): ResponseEntity<SnippetPermissionInfo> {
+        val owner =
+            permissionService.getSnippetOwner(snippetId)
+                ?: return ResponseEntity.notFound().build()
+
+        return ResponseEntity.ok(owner)
+    }
 }

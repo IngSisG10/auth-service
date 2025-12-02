@@ -5,7 +5,8 @@ import java.util.UUID
 
 data class SnippetPermissionInfo(
     val snippetId: UUID,
-    val ownerId: String,
+    val ownerId: String?,
     val ownerEmail: String?,
+    val ownerName: String?,
     val permission: PermissionType,
 )

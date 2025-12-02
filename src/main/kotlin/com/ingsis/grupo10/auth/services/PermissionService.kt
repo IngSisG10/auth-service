@@ -160,6 +160,7 @@ class PermissionService(
                 snippetId = permission.snippetId,
                 ownerId = owner?.id ?: "unknown",
                 ownerEmail = owner?.email,
+                ownerName = owner?.name,
                 permission = permission.permission,
             )
         }
@@ -253,6 +254,7 @@ class PermissionService(
                     snippetId = it.snippetId,
                     ownerId = it.user.id,
                     ownerEmail = it.user.email,
+                    ownerName = it.user.name,
                     permission = it.permission,
                 )
             }
@@ -267,6 +269,7 @@ class PermissionService(
                     snippetId = permission.snippetId,
                     ownerId = permission.user.id,
                     ownerEmail = permission.user.email,
+                    ownerName = permission.user.name,
                     permission = permission.permission,
                 )
             }
@@ -276,11 +279,33 @@ class PermissionService(
             .findByUserId(userId)
             .filter { it.permission == PermissionType.READ }
             .map { permission ->
+                val ownerPermission =
+                    snippetPermissionRepository
+                        .findBySnippetId(permission.snippetId)
+                        .find { it.permission == PermissionType.OWNER }
                 SnippetPermissionInfo(
                     snippetId = permission.snippetId,
-                    ownerId = permission.user.id,
+                    ownerId = ownerPermission?.user?.id,
                     ownerEmail = permission.user.email,
+                    ownerName = permission.user.name,
                     permission = permission.permission,
                 )
             }
+
+    fun getSnippetOwner(snippetId: UUID): SnippetPermissionInfo? {
+        val ownerPermission =
+            snippetPermissionRepository
+                .findBySnippetId(snippetId)
+                .find { it.permission == PermissionType.OWNER }
+                ?: return null
+
+        return SnippetPermissionInfo(
+            snippetId = snippetId,
+            ownerId = ownerPermission.user.id,
+            ownerEmail = ownerPermission.user.email,
+            ownerName = ownerPermission.user.name,
+            permission = ownerPermission.permission,
+        )
+    }
+
 }
