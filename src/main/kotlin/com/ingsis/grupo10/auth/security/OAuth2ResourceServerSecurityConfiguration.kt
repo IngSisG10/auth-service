@@ -27,7 +27,7 @@ class OAuth2ResourceServerSecurityConfiguration(
         http
             .authorizeHttpRequests {
                 it
-                    .requestMatchers("/", "/public/**")
+                    .requestMatchers("/", "/public/**", "/actuator/health")
                     .permitAll()
                     .requestMatchers("/secret/**")
                     .authenticated()
